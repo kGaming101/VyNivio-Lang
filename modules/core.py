@@ -19,16 +19,29 @@ def output(variables,line):
     value = ""
 
     for part in parts[1:]:
-        
-        if part.startswith("%$"):
-            if part.replace("%$","") in variables:
-                part = part.replace("%$","")
-                value += str(variables[part]) + " "
+      value += str(part) + " "
+
+    print(value)
+
+
+
+def foutput(variables,line):
+    parts = line.split()
+    value = ""
+
+    for part in parts[1:]:
+
+        if part.startswith("{"):
+          if part.endswith("}"):
+              part = part.replace("{","")
+              part = part.replace("}","")
+              if part in variables:
+                  value += str(variables[part]) + " "
         else:
             value += str(part) + " "
 
     print(value)
-
+  
 
 
 def make(variables,lines,line_num):
@@ -37,7 +50,7 @@ def make(variables,lines,line_num):
     changable = "undefined"
     modifier = 0
 
-    allowed_var_types = {"string", "boolean", "decimal", "list", "dictionary", "multiline_sting"}
+    allowed_var_types = {"string", "boolean", "decimal", "list", "dictionary", "multiline_string"}
 
 
     if parts[1] not in ["a", "an"]:
@@ -112,10 +125,10 @@ def make(variables,lines,line_num):
     elif var_type == "dictionary":
         value = {key.strip(): data.strip() for key, data in [item.split("-") for item in " ".join(parts[7+modifier:]).split(",")]}
 
-    elif var_type == "multiline_sting":
+    elif var_type == "multiline_string":
         line_num += 1
         while True:
-            if lines[line_num] == "end multiline_sting\n":
+            if lines[line_num] == "end multiline_string\n":
                 break
             value += lines[line_num]
             line_num += 1
@@ -142,12 +155,15 @@ def interpret_line(line_num, lines, indent_level):
     
     if parts[0] == "output":
         output(variables,lines[line_num])
+
+    elif parts[0] == "foutput":
+        foutput(variables,lines[line_num])
     
     elif parts[0] == "make":
         variables, line_num  = make(variables,lines,line_num)
         
 
     else:
-        raise SyntaxError(f"On line {line_num+1} expected \"command\" -> {lines[line_num]}")
+        raise SyntaxError(f"On line {line_num+1} expected command word -> {lines[line_num]}")
     
     return line_num
